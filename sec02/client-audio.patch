@@ -1,0 +1,90 @@
+--- sec02/client.html	2025-04-13 18:36:57.041230092 +0900
++++ sec02/client-audio.html	2025-04-13 18:37:52.608719332 +0900
+@@ -1,7 +1,7 @@
+ <!doctype html>
+ <html>
+ <head>
+-<title>個別課題2</title>
++<title>個別課題2 (Incl. 音声合成/音声認識)</title>
+ <meta charset="utf-8" />
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+ <script>
+@@ -70,6 +70,13 @@
+         'click', function () {
+             $('#post_message_result').empty()
+             $('#post_message_message').val('')
++            $('#audio-result').empty()
++        })
++    $('button#play').on(
++        'click', function () {
++            const uttr = new SpeechSynthesisUtterance($('#get_message_result_message').text())
++            uttr.lang = 'ja-JP'
++            speechSynthesis.speak(uttr)
+         })
+ })
+ </script>
+@@ -88,7 +95,8 @@
+ <ul>
+ <li>URL: <input type="text" id="get_message_url" value="http://127.0.0.1:8000/message"></li>
+ <li>Name: <span id="get_message_result_name"></span></li>
+-<li>Message: <span id="get_message_result_message"></span></li>
++<li>Message: <button id="play">PLAY</button>
++<span id="get_message_result_message"></span></li>
+ <li>Time: <span id="get_message_result_time"></span></li>
+ </ul>
+ 
+@@ -109,11 +117,53 @@
+ 
+ <p>
+ <button id="post_message">POST</button>
+-<button id="post_message_clear">Clear</button>
++<button id="post_message_clear">Clear</button><br />
++Audio Recognition: 
++<button id="start-btn">Start</button>
++<button id="stop-btn">Stop</button>
+ </p>
+ 
+ <p>送信したメッセージ(Name: Message):</p>
+ <div id="post_message_result"></div>
+ 
++<div id="audio-result"></div>
++
++<script>
++  // https://qiita.com/hmmrjn/items/4b77a86030ed0071f548
++  const startBtn = document.querySelector('#start-btn')
++  const stopBtn = document.querySelector('#stop-btn')
++  const resultDiv = document.querySelector('#audio-result')
++
++  SpeechRecognition = webkitSpeechRecognition || SpeechRecognition
++  let recognition = new SpeechRecognition()
++
++  recognition.lang = 'ja-JP'
++  recognition.interimResults = true
++  recognition.continuous = true
++
++  let finalTranscript = '' // 確定した(黒の)認識結果
++
++  recognition.onresult = (event) => {
++    let interimTranscript = '' // 暫定(灰色)の認識結果
++    for (let i = event.resultIndex; i < event.results.length; i++) {
++      let transcript = event.results[i][0].transcript
++      if (event.results[i].isFinal) {
++        finalTranscript += transcript
++      } else {
++        interimTranscript = transcript
++      }
++    }
++    resultDiv.innerHTML = finalTranscript + '<i style="color:#ddd;">' + interimTranscript + '</i>'
++    $("#post_message_message").val($("#audio-result").text())
++  }
++
++  startBtn.onclick = () => {
++    recognition.start()
++  }
++  stopBtn.onclick = () => {
++    recognition.stop()
++  }
++</script>
++
+ </body>
+ </html>

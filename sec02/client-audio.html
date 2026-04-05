@@ -1,0 +1,169 @@
+<!doctype html>
+<html>
+<head>
+<title>個別課題2 (Incl. 音声合成/音声認識)</title>
+<meta charset="utf-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+async function api_request(url) {
+    try {
+        const response = await fetch(url)
+        const json = await response.json()
+        return json
+    } catch (err) {
+        console.error("GET失敗:", err)
+        return { message: "エラーが発生しました" }
+    }
+}
+async function api_request_post(url, data) {
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        })
+        const json = await response.json()
+        return json
+    } catch (err) {
+        console.error("POST失敗:", err)
+        return { message: "エラーが発生しました" }
+    }
+}
+$(function () {
+    // GET (メッセージ取得)
+    $('button#get_message').on(
+        'click', function () {
+            url = $('#get_message_url').val()
+            console.log(url)
+            api_request(url).then(function(value) {
+                $('#get_message_result_name').html(value['name'])
+                $('#get_message_result_message').html(value['message'])
+                $('#get_message_result_time').html(value['time'])
+                console.log(value['message'])
+            })
+        })
+    // POST (メッセージ送信)
+    $('button#post_message').on(
+        'click', function () {
+            url = $('#post_message_url').val()
+            console.log(url)
+            data = {
+                name: $("#post_message_name").val().trim(),
+                message: $("#post_message_message").val().trim()
+            }
+            if (data['name'].length == 0 || data['message'].length == 0 || url.length == 0) {
+                return
+            }
+            api_request_post(url, data).then(function(value) {
+                $('#post_message_result').html(value['name'] + ': ' + value['message'])
+            })
+        })
+    // GETした結果のクリア
+    $('button#get_message_clear').on(
+        'click', function () {
+            $('#get_message_result_name').empty()
+            $('#get_message_result_message').empty()
+            $('#get_message_result_time').empty()
+        })
+    // POST情報のクリア
+    $('button#post_message_clear').on(
+        'click', function () {
+            $('#post_message_result').empty()
+            $('#post_message_message').val('')
+            $('#audio-result').empty()
+        })
+    $('button#play').on(
+        'click', function () {
+            const uttr = new SpeechSynthesisUtterance($('#get_message_result_message').text())
+            uttr.lang = 'ja-JP'
+            speechSynthesis.speak(uttr)
+        })
+})
+</script>
+<style>
+input {
+    width: 80%;
+}
+</style>
+</head>
+<body>
+
+<h3>GET</h3>
+
+メッセージの取得．
+
+<ul>
+<li>URL: <input type="text" id="get_message_url" value="http://127.0.0.1:8000/message"></li>
+<li>Name: <span id="get_message_result_name"></span></li>
+<li>Message: <button id="play">PLAY</button>
+<span id="get_message_result_message"></span></li>
+<li>Time: <span id="get_message_result_time"></span></li>
+</ul>
+
+<p>
+<button id="get_message">GET</button>
+<button id="get_message_clear">Clear</button>
+</p>
+
+<h3>POST</h3>
+
+メッセージの送信．
+
+<ul>
+<li>URL: <input type="text" id="post_message_url" value="http://127.0.0.1:8000/message"></li>
+<li>Name: <input type="text" id="post_message_name"></li>
+<li>Message: <input type="text" id="post_message_message"></li>
+</ul>
+
+<p>
+<button id="post_message">POST</button>
+<button id="post_message_clear">Clear</button><br />
+Audio Recognition: 
+<button id="start-btn">Start</button>
+<button id="stop-btn">Stop</button>
+</p>
+
+<p>送信したメッセージ(Name: Message):</p>
+<div id="post_message_result"></div>
+
+<div id="audio-result"></div>
+
+<script>
+  // https://qiita.com/hmmrjn/items/4b77a86030ed0071f548
+  const startBtn = document.querySelector('#start-btn')
+  const stopBtn = document.querySelector('#stop-btn')
+  const resultDiv = document.querySelector('#audio-result')
+
+  SpeechRecognition = webkitSpeechRecognition || SpeechRecognition
+  let recognition = new SpeechRecognition()
+
+  recognition.lang = 'ja-JP'
+  recognition.interimResults = true
+  recognition.continuous = true
+
+  let finalTranscript = '' // 確定した(黒の)認識結果
+
+  recognition.onresult = (event) => {
+    let interimTranscript = '' // 暫定(灰色)の認識結果
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      let transcript = event.results[i][0].transcript
+      if (event.results[i].isFinal) {
+        finalTranscript += transcript
+      } else {
+        interimTranscript = transcript
+      }
+    }
+    resultDiv.innerHTML = finalTranscript + '<i style="color:#ddd;">' + interimTranscript + '</i>'
+    $("#post_message_message").val($("#audio-result").text())
+  }
+
+  startBtn.onclick = () => {
+    recognition.start()
+  }
+  stopBtn.onclick = () => {
+    recognition.stop()
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,275 @@
+<!doctype html>
+<html>
+<head>
+<title>個別課題4</title>
+<meta charset="utf-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+
+// サーバを指定する場合は server = 'http://192.168.11.9/' などとする
+const server = ''
+
+// 編集中の message id
+var edit_id = null
+
+// 時刻フォーマット
+const dateoption = new Intl.DateTimeFormat('ja-JP', {
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+})
+
+// GET
+async function api_request_get(url, method = 'GET') {
+    try {
+        const response = await fetch(url, {
+            method: method
+        })
+        const json = await response.json()
+        return json
+    } catch (err) {
+        console.error("GET失敗:", err)
+        return { message: "エラーが発生しました" }
+    }
+}
+
+// POST
+async function api_request_post(url, data, method = 'POST') {
+    const query = new URLSearchParams({message: data})
+    try {
+        const response = await fetch(url, {
+            method: method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        })
+        const json = await response.json()
+        return json
+    } catch (err) {
+        console.error("POST失敗:", err)
+        return { message: "エラーが発生しました" }
+    }
+}
+
+// PUT (POSTを流用)
+async function api_request_put(url, data) {
+    return api_request_post(url, data, 'PUT')
+}
+
+// DELETE (GETを流用)
+async function api_request_delete(url) {
+    return api_request_get(url, 'DELETE')
+}
+
+// Message の POST (edit_id がある場合は PUT)
+async function message_post(data) {
+    var url = server + '/messages'
+    if (edit_id === null) {
+        return api_request_post(url, data)
+    } else {
+        url = url + '/' + edit_id
+        console.log(data)
+        return api_request_put(url, data).then(function(value) {
+            display_replace_message(value)
+        })
+    }
+}
+
+// Message の GET (個別 Message)
+async function message_get(id) {
+    url = server + '/messages/' + id
+    api_request_get(url).then(function(value) {
+        display_replace_message(value)
+    })
+}
+
+// Message の GET (全て)
+async function message_get_all() {
+    var url = server + '/messages'
+    api_request_get(url).then(function(value) {
+        var a = Object.keys(value['messages']).reverse()
+        $('#messages ul').empty()
+        if (a.length == 0) {
+            $('#messages ul').append(`<li class="message">ここにはなにもない</li>`)
+        } else {
+            for (var i = 0; i < a.length; i++) {
+                display_add_message(value['messages'][a[i]])
+            }
+        }
+    })
+}
+
+// 各 Message のボタンに callback を登録
+function register_callback(message_id) {
+    // DELETEボタンが押された時
+    $('button#' + message_id + '.delete').off('click').on(
+        'click', function() {
+            url = server + '/messages/' + this.id
+            api_request_delete(url).then(function() {
+                $(this).parent().remove()
+            }.bind(this))
+        }
+    )
+    // EDITボタンが押された時
+    $('button#' + message_id + '.edit').off('click').on(
+        'click', function() {
+            edit_id = this.id
+            url = server + '/messages/' + edit_id
+            api_request_get(url).then(function(value) {
+                $('#post_message_name').val(value['name'])
+                $('#post_message_message').val(value['message'])
+                $('button#post_message').html('PUT')
+                $('h3#post').html('PUT ' + edit_id)
+            })
+        }
+    )
+    // ☆/★ボタンが押された時
+    $('button#' + message_id + '.toggle_important').off('click').on(
+        'click', function() {
+            toggle_id = this.id
+            url = server + '/messages/' + toggle_id + '/important'
+            api_request_get(url).then(function(value) {
+                console.log(value['important'])
+                if (value['important']) { // ★の時
+                    api_request_delete(url).then(function() {
+                        message_get(toggle_id)
+                    })
+                } else { // ☆の時
+                    api_request_put(url).then(function() {
+                        message_get(toggle_id)
+                    })
+                }
+            })
+        }
+    )
+}
+
+// message 表示用の HTML 生成(li の中身)
+function display_item(val) {
+    var i = '☆'
+    if(val['important']) {
+        i = '★'
+    }
+    var s = dateoption.format(Date.parse(val['time']))
+    return `${val['id']} ${val['name']}:<br />${val['message']}<br />${s}<br /><button class='delete' id="${val['id']}">Delete</button><button class="edit" id="${val['id']}">Edit</button><button class="toggle_important" id="${val['id']}">${i}</button>`
+}
+
+// message を li として ul に追加
+function display_add_message(val) {
+    $('#messages ul').append(`<li class="message" id="${val['id']}">${display_item(val)}</li>`)
+    register_callback(val['id'])
+}
+
+// message を置き換え(li の中身を val で書き換える)
+function display_replace_message(val) {
+    var s = dateoption.format(Date.parse(val['time']))
+    $('#messages ul li.message#' + val['id']).empty()
+    $('#messages ul li.message#' + val['id']).append(display_item(val))
+    register_callback(val['id'])
+}
+
+// HTMLロード後，基本オブジェクトに callback を追加
+$(function () {
+    $('button#get_message').on(
+        'click', function () {
+            message_get_all()
+        })
+    $('button#post_message').on(
+        'click', function () {
+            var data = {
+                name: $('#post_message_name').val().trim(),
+                message: $('#post_message_message').val().trim(),
+            }
+            if (data['name'].length == 0 || data['message'].length == 0) {
+                return
+            }
+            message_post(data)
+        })
+    $('button#get_message_clear').on(
+        'click', function () {
+            $('#messages ul').empty()
+        })
+    $('button#post_message_clear').on(
+        'click', function () {
+            edit_id = null
+            $('button#post_message').html('POST')
+            $('h3#post').html('POST')
+            $('#post_message_result').empty()
+            $('#post_message_message').val('')
+        })
+    message_get_all()
+})
+</script>
+<style>
+/* スタイルシート お好みで．．． */
+input {
+    width: 95%;
+}
+ul {
+    /* https://developer.mozilla.org/ja/docs/Web/CSS/CSS_flexible_box_layout */
+    display: flex;
+
+    /* https://developer.mozilla.org/ja/docs/Web/CSS/flex-wrap */
+    flex-wrap: wrap;
+
+    list-style: none; /* ・を消す */
+}
+/* Message の表示スタイル */
+li.message {
+    width: 120pt;
+    background: #fee;
+    border-radius: 12% 3%;
+    list-style-position: inside;
+    border: 1px solid #caa;
+    padding: 5px;
+}
+/* Button の表示スタイル */
+button {
+    border: 1px solid #a88;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 1px 1px;
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+button:hover {
+    background-color: #644;
+    color: #fee;
+}
+button.toggle_important {
+    border: none;
+    background: none;
+    font-size: 16px;
+}
+button.toggle_important:hover {
+    color: black;
+}
+</style>
+</head>
+<body>
+
+<h3 id="post">POST</h3>
+
+<ul>
+<li><label for="post_message_name">Name:</label>
+<input type="text" id="post_message_name" name="name"></li>
+<li><label for="post_message_message">Message:</label>
+<input type="text" id="post_message_message" name="message"></li>
+</ul>
+
+<ul>
+<li><button id="post_message" type='button'>POST</button></li>
+<li><button id="post_message_clear" type='button'>Clear</button></li>
+</ul>
+
+<h3>GET</h3>
+
+<ul>
+<li><button id="get_message">GET</button></li>
+<li><button id="get_message_clear">Clear</button></li>
+</ul>
+
+<div id="messages"><ul></ul></div>
+
+</body>
+</html>

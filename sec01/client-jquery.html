@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+<title>個別課題1 (jQuery Ajax版)</title>
+<meta charset="utf-8" />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+const server = 'http://localhost:8000' // 開発時のAPIサーバ接続先
+async function api_request(path) {
+    const url = server + path
+    try {
+        return await $.ajax({ url: url })
+    } catch (err) {
+        console.error("GET失敗:", err)
+        return { message: "エラーが発生しました" }
+    }
+}
+async function api_request_post(path, data) {
+    const query = new URLSearchParams({message: data})
+    const url = server + path + '?' + query
+    try {
+        return await $.ajax({ url: url, method: 'POST' })
+    } catch (err) {
+        console.error("POST失敗:", err)
+        return { message: "エラーが発生しました" }
+    }
+}
+$(function () {
+    // GET (メッセージ取得)
+    $('button#get_message').on(
+        'click', function () {
+            api_request('/message').then(function(value) {
+                $('#get_message_result').empty()
+                $('#get_message_result').append(value['message'])
+                console.log(value['message'])
+            })
+        })
+    // POST (メッセージ送信)
+    $('button#post_message').on(
+        'click', function () {
+            let data = $("#post_message_body").val()
+            api_request_post('/message', data).then(function(value) {
+                $('#post_message_result').empty()
+                $('#post_message_result').append(value['message'])
+            })
+        })
+    // GETした結果を表示するDIV内のクリア
+    $('button#get_message_clear').on(
+        'click', function () {
+            $('#get_message_result').empty()
+        })
+    // POST情報のクリア
+    $('button#post_message_clear').on(
+        'click', function () {
+            $('#post_message_result').empty()
+            $('#post_message_body').val('')
+        })
+})
+</script>
+</head>
+<body>
+
+<h3>GET http://127.0.0.1:8000/message</h3>
+
+<p>
+<button id="get_message">GET</button>
+<button id="get_message_clear">Clear</button>
+</p>
+
+<p>取得したメッセージ:</p>
+<div id="get_message_result"></div>
+
+<h3>POST http://127.0.0.1:8000/message</h3>
+
+<p>
+<label for="post_message_body">送信するメッセージ:</label><br>
+<textarea id="post_message_body"></textarea>
+</p>
+
+<p>
+<button id="post_message">POST</button>
+<button id="post_message_clear">Clear</button>
+</p>
+
+<p>送信したメッセージ:</p>
+<div id="post_message_result"></div>
+
+</body>
+</html>
