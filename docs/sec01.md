@@ -681,7 +681,7 @@ Hypertext Transfer Protocol (HTTP; [RFC 9110](https://datatracker.ietf.org/doc/h
 
 ### Cross-origin resource sharing (CORS) ###
 
-Pythonのコードに以下の記述がある．ブラウザには，同一生成元ポリシーに基づく制限があり，[クロスオリジンリソース共有(CORS)](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)はそれを制御された形で緩和する仕組みである(一方で，[クロスサイトリクエストフォージェリ(CSRF)](https://en.wikipedia.org/wiki/Cross-site_request_forgery)のような別のセキュリティ課題も存在する)．
+Pythonのコードに以下の記述がある．ブラウザには，[同一生成元ポリシー(same-origin policy, SOP)](https://en.wikipedia.org/wiki/Same-origin_policy)に基づく制限があり，[クロスオリジンリソース共有(CORS)](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)はそれを制御された形で緩和する仕組みである(一方で，[クロスサイトリクエストフォージェリ(CSRF)](https://en.wikipedia.org/wiki/Cross-site_request_forgery)のような別のセキュリティ課題も存在する)．
 
 ```python
 app.add_middleware(
