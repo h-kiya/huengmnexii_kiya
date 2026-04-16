@@ -10,7 +10,7 @@ router = APIRouter()
 
 @router.get("/messages", response_model=message_schema.Response)
 async def get_messages(request: Request,
-                       from_id: int = 1, to_id: int | None = None,
+                       from_id: int | None = 1, to_id: int | None = None,
                        from_time: datetime | None = None,
                        important: bool | None = None,
                        ids_only: bool = False):
@@ -18,6 +18,7 @@ async def get_messages(request: Request,
     if from_id is None or from_id < 1:
         from_id = 1
     if to_id is None:
+        # to_id が指定されない場合は，現在の最大IDまで取得する．
         to_id = request.app.state.system.current_id
     l: list = []
     for i in range(from_id, to_id + 1):
@@ -29,6 +30,7 @@ async def get_messages(request: Request,
                 elif request.app.state.system.messages[i].important == important:
                     l.append(i)
 
+    # ID のリストのみ返す
     if ids_only:
         return message_schema.Response(
             current_id=request.app.state.system.current_id,
