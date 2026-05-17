@@ -10,6 +10,7 @@ class MessageBase(BaseModel):
                                 examples=["Default Message"],
                                 description="Message body")
     important: bool = Field(False, description="Important or not")
+    like: bool = Field(False, description="like or not")
 
 
 class Message(MessageBase):

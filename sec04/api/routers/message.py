@@ -65,7 +65,7 @@ async def get_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # get_message_important
-    important = True
+    important = request.app.state.messages.messages[message_id].important
     return {"important": important}
 
 
@@ -76,6 +76,7 @@ async def put_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # put_message_important
+    request.app.state.messages.messages[message_id].important = True
     return {"success": True}
 
 
@@ -86,4 +87,47 @@ async def delete_message_important(request: Request, message_id: int):
         raise HTTPException(status_code=404,
                             detail="Message cannot be found")
     # delete_message_important
+    request.app.state.messages.messages[message_id].important = False
     return {"success": True}
+
+@router.get("/messages/{message_id}/important")
+async def get_message_important(request: Request, message_id: int):
+    """message important flag の GET """
+    if message_id not in request.app.state.messages.messages:
+        raise HTTPException(status_code=404,
+                            detail="Message cannot be found")
+    # get_message_important
+    important = request.app.state.messages.messages[message_id].important
+    return {"important": important}
+
+
+@router.put("/messages/{message_id}/like")
+async def put_message_like(request: Request, message_id: int):
+    """message like flag の PUT (like = True)"""
+    if message_id not in request.app.state.messages.messages:
+        raise HTTPException(status_code=404,
+                            detail="Message cannot be found")
+    # put_message_important
+    request.app.state.messages.messages[message_id].like = True
+    return {"success": True}
+
+
+@router.delete("/messages/{message_id}/like")
+async def delete_message_important(request: Request, message_id: int):
+    """message important flag の DELETE (like = False)"""
+    if message_id not in request.app.state.messages.messages:
+        raise HTTPException(status_code=404,
+                            detail="Message cannot be found")
+    # delete_message_important
+    request.app.state.messages.messages[message_id].like = False
+    return {"success": True}
+
+@router.get("/messages/{message_id}/like")
+async def get_message_important(request: Request, message_id: int):
+    """message like flag の GET """
+    if message_id not in request.app.state.messages.messages:
+        raise HTTPException(status_code=404,
+                            detail="Message cannot be found")
+    # get_message_important
+    like = request.app.state.messages.messages[message_id].like
+    return {"like": like}

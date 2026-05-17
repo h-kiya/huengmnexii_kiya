@@ -140,6 +140,26 @@ function register_callback(message_id) {
             })
         }
     )
+
+    // ♡/♥ボタンが押された時
+    $('button#' + message_id + '.toggle_like').off('click').on(
+        'click', function() {
+            const toggle_id = this.id
+            let url = server + '/messages/' + toggle_id + '/like'
+            api_request_get(url).then(function(value) {
+                console.log(value['like'])
+                if (value['like']) { // ♥の時
+                    api_request_delete(url).then(function() {
+                        message_get(toggle_id)
+                    })
+                } else { // ♡の時
+                    api_request_put(url).then(function() {
+                        message_get(toggle_id)
+                    })
+                }
+            })
+        }
+    )
 }
 
 // message 表示用の HTML 生成(li の中身)
@@ -151,6 +171,16 @@ function display_item(val) {
     let s = dateoption.format(Date.parse(val['time']))
     return `${val['id']} ${val['name']}:<br />${val['message']}<br />${s}<br /><button class='delete' id="${val['id']}">Delete</button><button class="edit" id="${val['id']}">Edit</button><button class="toggle_important" id="${val['id']}">${i}</button>`
 }
+
+function display_heart(val) {
+    let i = '♡'
+    if(val['like']) {
+        i = '♥'
+    }
+    let s = dateoption.format(Date.parse(val['time']))
+    return `${val['id']} ${val['name']}:<br />${val['message']}<br />${s}<br /><button class='delete' id="${val['id']}">Delete</button><button class="edit" id="${val['id']}">Edit</button><button class="important" id="${val['id']}">${i}</button>Edit</button><button class="like" id="${val['id']}">${i}</button>`
+}
+
 
 // message を li として ul に追加
 function display_add_message(val) {
@@ -240,8 +270,17 @@ button.toggle_important {
     font-size: 16px;
 }
 button.toggle_important:hover {
+    color: rgb(255, 0, 0);
+}
+button.toggle_like {
+    border: none;
+    background: none;
+    font-size: 16px;
+}
+button.toggle_like:hover {
     color: black;
 }
+
 </style>
 </head>
 <body>
