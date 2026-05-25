@@ -40,7 +40,8 @@ def check(server_current_id):
         for i in range(server_current_id + 1, res_dict['current_id'] + 1):
             message = get_message(i)
             print_message(message)
-
+            if message.message == "ぬるぽ":
+                post_message("名無しさん", f"ガッ>>{i}")
     return res_dict['current_id']
 
 

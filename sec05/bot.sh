@@ -1,8 +1,8 @@
 #!/bin/sh
 
 base_url=http://127.0.0.1:8000
-name=Bot
-message=Test
+name=名無しさん
+message=ぬるぽ
 
 if [ ! "$1" = "" ] ; then
     name=$1
