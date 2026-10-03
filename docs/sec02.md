@@ -266,6 +266,7 @@ DefaultのWindows + WSL環境ではNATモード(上記の通り2つのIPアド�
 ![](images/sec02_windows_wsl_mirrored.png)
 
 [^address_loopback]: Host Address Loopback の説明は以下のとおりで，Windows に割り当てられた IP アドレスを用いて，WSL と Windows の間で相互に接続できるようになる．
+
     >   Only applicable when wsl2.networkingMode is set to mirrored. When
     >   set to True, will allow the Container to connect to the Host, or
     >   the Host to connect to the Container, by an IP address that's

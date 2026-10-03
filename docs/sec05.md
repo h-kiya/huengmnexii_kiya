@@ -1223,7 +1223,7 @@ FastAPI は強力かつ直感的な依存性注入(DI: Dependency Injection)シ�
 -   第0回: 環境構築(WSLなど)．`FastAPI`動作確認．`GET`まで．
 -   第1回: `POST`メソッドでサーバにデータを送る．JavaScriptを用いたクライアント作成．
 -   第2回: ネットワークの設定(WSLとポートフォワーディング)．型あるいは構造，スキーマについて考えた．
--   第3回: データの保存(シリアライズ)と排他制御(ロック機構)．
+-   第3回: データの保存(シリアライズ)，ファイルの取り扱い，画像データ．
 -   第4回: `GET`，`POST`，`PUT`，`DELETE` 勢揃い(REST API設計実装)．FastAPI の [APIRouter](https://fastapi.tiangolo.com/reference/apirouter/)利用．
 -   第5回: Query String．更新された箇所のみ取得する方法を学んだ．
 
